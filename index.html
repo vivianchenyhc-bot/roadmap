@@ -224,6 +224,14 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1D9E75}
 .cf-num{width:20px;height:20px;border-radius:50%;background:#EEEDFE;color:#534AB7;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
 .cf-code{background:#F1EFE8;border-radius:6px;padding:9px 11px;font-size:10px;font-family:var(--mono);color:var(--tx2);word-break:break-all;line-height:1.6;border:.5px solid var(--brd);cursor:text;user-select:all}
 
+/* ── Track collapse ── */
+.track-collapse-btn{width:14px;height:14px;cursor:pointer;color:var(--tx3);font-size:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1;transition:color .15s;border-radius:3px;user-select:none}
+.track-collapse-btn:hover{color:var(--tx);background:var(--bg)}
+.grow.track-collapsed,.grow.track-collapsed .glabel{min-height:18px !important}
+.grow.track-collapsed .glabel{padding-top:1px;padding-bottom:1px}
+.grow.track-collapsed .gbar,.grow.track-collapsed .addbar,.grow.track-collapsed .drag-handle{display:none !important}
+.grow.track-collapsed .glname{opacity:.5;font-size:11px}
+
 /* ── Readonly mode ── */
 body.readonly-mode .edit-only { display:none !important; }
 body.readonly-mode [contenteditable] { pointer-events:none; cursor:default; outline:none; }
@@ -1665,7 +1673,7 @@ const row=document.createElement('div'); row.className='grow';
 const lbl=document.createElement('div'); lbl.className='glabel';
 lbl.style.width=LABEL_W+'px'; lbl.style.minWidth=LABEL_W+'px';
 if(userRole!=='viewer') row.draggable=true; row.dataset.trackid=t.id;
-lbl.innerHTML=`<span class="drag-handle" title="拖移排序">&#8942;</span><span class="glname" contenteditable="true"
+lbl.innerHTML=`<span class="track-collapse-btn" onclick="toggleTrackCollapse('${t.id}',event)" title="${t.collapsed?'展開軌道':'收合軌道'}">${t.collapsed?'&#9654;':'&#9660;'}</span><span class="drag-handle" title="拖移排序">&#8942;</span><span class="glname" contenteditable="true"
 onblur="saveTrackName('${t.id}',this.innerText)"
 onkeydown="if(event.key==='Escape'||event.key==='Enter'){event.preventDefault();this.blur()}"
 >${escH(t.name)}</span>
@@ -1695,7 +1703,8 @@ track.appendChild(vl);
 const ROW_H=38,BAR_H=26,PAD_V=7;
 const {rowMap,numRows}=assignBarRows(t.bars);
 const trackH=PAD_V*2+numRows*ROW_H;
-track.style.height=trackH+'px';
+if(t.collapsed){ row.classList.add('track-collapsed'); track.style.height='18px'; }
+else{ track.style.height=trackH+'px'; }
 t.bars.forEach(b=>{
 const left=(b.start-1)*CELL_W;
 const width=(b.end-b.start+1)*CELL_W-2;
@@ -1813,6 +1822,14 @@ const t=text.trim();
 if(t&&t!=='點擊填入目標…') S.sprintGoals[String(s)]=t;
 else delete S.sprintGoals[String(s)];
 save(); renderSprintPanel();
+}
+
+function toggleTrackCollapse(tid,e){
+e.stopPropagation();
+const t=S.tracks.find(x=>x.id===tid);
+if(!t) return;
+t.collapsed=!t.collapsed;
+render();
 }
 
 function addTrack(){
