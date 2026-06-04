@@ -175,9 +175,9 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1D9E75}
 .phase-item-body{flex:1;display:flex;flex-direction:column;gap:2px}
 .phase-item-tags{display:flex;gap:3px;flex-wrap:wrap}
 .sbadge{display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:.3px;white-space:nowrap;line-height:1.5}
-.sb-dev{background:#DBEAFE;color:#1E40AF}.sb-stg{background:#FEF3C7;color:#92400E}
+.sb-dev{background:#E5E7EB;color:#374151}.sb-stg{background:#DBEAFE;color:#1E40AF}
 .sb-prod{background:#D1FAE5;color:#065F46}.sb-planned{background:#EDE9FE;color:#5B21B6}
-.sb-todo{background:#F1EFE8;color:#888780}.sb-uat{background:#CCFBF1;color:#0F766E}
+.sb-todo{background:#F1EFE8;color:#888780}.sb-uat{background:#FFEDD5;color:#C2410C}
 .ph-add-btn{font-size:10px;padding:2px 7px;border-radius:4px;border:.5px dashed var(--brd2);background:transparent;cursor:pointer;color:var(--tx3);font-family:var(--font);flex-shrink:0}
 .ph-add-btn:hover{color:var(--tx);border-color:var(--tx3)}
 /* Confluence */
@@ -213,9 +213,9 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1D9E75}
 .phase-item-body{flex:1;display:flex;flex-direction:column;gap:2px}
 .phase-item-tags{display:flex;gap:3px;flex-wrap:wrap}
 .sbadge{display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:.3px;white-space:nowrap;line-height:1.5}
-.sb-dev{background:#DBEAFE;color:#1E40AF}.sb-stg{background:#FEF3C7;color:#92400E}
+.sb-dev{background:#E5E7EB;color:#374151}.sb-stg{background:#DBEAFE;color:#1E40AF}
 .sb-prod{background:#D1FAE5;color:#065F46}.sb-planned{background:#EDE9FE;color:#5B21B6}
-.sb-todo{background:#F1EFE8;color:#888780}.sb-uat{background:#CCFBF1;color:#0F766E}
+.sb-todo{background:#F1EFE8;color:#888780}.sb-uat{background:#FFEDD5;color:#C2410C}
 .ph-add-btn{font-size:10px;padding:2px 7px;border-radius:4px;border:.5px dashed var(--brd2);background:transparent;cursor:pointer;color:var(--tx3);font-family:var(--font);flex-shrink:0}
 .ph-add-btn:hover{color:var(--tx);border-color:var(--tx3)}
 /* Confluence modal */
@@ -230,6 +230,7 @@ input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1D9E75}
 .phase-item-text{outline:none;cursor:text}
 .phase-item-text:focus{background:var(--bg);border-radius:3px;padding:1px 4px;margin:-1px -4px}
 .sbadge.tag-cycler{cursor:pointer;transition:filter .1s}.sbadge.tag-cycler:hover{filter:brightness(.88)}
+.sbadge[contenteditable="true"]{outline:1.5px solid currentColor;outline-offset:1px;min-width:36px;cursor:text;filter:none !important}
 .phase-item-acts{display:none;gap:2px;margin-left:4px;flex-shrink:0;align-items:center}
 .phase-item:hover .phase-item-acts{display:flex}
 .phase-item-act-btn{padding:0 5px;height:16px;font-size:10px;border-radius:3px;border:.5px solid var(--brd2);background:transparent;cursor:pointer;color:var(--tx3);font-family:var(--font);line-height:1}
@@ -1505,12 +1506,26 @@ item.tags.forEach(function(tag,ti){
 var badge=document.createElement('span');
 badge.className='sbadge tag-cycler '+stClass(tag.type);
 badge.textContent=stLabel(tag.type)+(tag.ver?' ('+escH(tag.ver)+')':'');
-badge.title='點擊切換狀態，右鍵移除';
+badge.title='點擊編輯，右鍵移除';
 badge.onclick=function(e){
 e.stopPropagation();
-var types=STATUS_TYPES.map(function(s){return s.type;});
-S.phases[pi].groups[gi].items[ii].tags[ti].type=types[(types.indexOf(tag.type)+1)%types.length];
+if(this.contentEditable==='true') return;
+this.contentEditable='true';
+this.textContent=stLabel(tag.type);
+this.focus();
+var r=document.createRange(); r.selectNodeContents(this);
+window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+};
+badge.onblur=function(){
+this.contentEditable='false';
+var typed=this.textContent.trim().toLowerCase();
+var matched=STATUS_TYPES.find(function(s){return s.type===typed||s.label.toLowerCase()===typed;});
+if(matched) S.phases[pi].groups[gi].items[ii].tags[ti].type=matched.type;
 save(); render();
+};
+badge.onkeydown=function(e){
+e.stopPropagation();
+if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();this.blur();}
 };
 badge.oncontextmenu=function(e){e.preventDefault();e.stopPropagation();S.phases[pi].groups[gi].items[ii].tags.splice(ti,1);save();render();};
 tagsSpan.appendChild(badge);
